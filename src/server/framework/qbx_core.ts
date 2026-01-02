@@ -58,10 +58,24 @@ export class QbxCoreGangFramework {
   private gangs: Map<string, Gang> = new Map();
 
   constructor() {
-    // @ts-ignore - QBCore is a global export from qbx_core
-    global.exports['qbx_core'].GetCoreObject().then((core: QBCore) => {
-      this.QBCore = core;
-    });
+    // Handle both sync and async QBCore initialization
+    try {
+      const coreExport = (global as any).exports?.['qbx_core']?.GetCoreObject;
+      if (coreExport) {
+        const result = coreExport();
+        if (result && typeof result.then === 'function') {
+          // Async
+          result.then((core: QBCore) => {
+            this.QBCore = core;
+          });
+        } else {
+          // Sync
+          this.QBCore = result;
+        }
+      }
+    } catch (error) {
+      console.error('Failed to initialize QBCore:', error);
+    }
   }
 
   /**
@@ -290,8 +304,14 @@ export class QbxCoreGangFramework {
    * Notify player
    */
   notifyPlayer(source: number, message: string, type: 'success' | 'error' | 'primary' = 'primary'): void {
-    // @ts-ignore - QBCore notify export
-    global.exports['qbx_core'].Notify(source, message, type);
+    try {
+      const notifyExport = (global as any).exports?.['qbx_core']?.Notify;
+      if (notifyExport) {
+        notifyExport(source, message, type);
+      }
+    } catch (error) {
+      console.error('Failed to notify player:', error);
+    }
   }
 }
 

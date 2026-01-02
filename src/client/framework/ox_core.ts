@@ -16,6 +16,13 @@ export class OxCoreGangFramework {
   private currentGang: GangData | null = null;
 
   /**
+   * Get resource name safely
+   */
+  private getResourceName(): string {
+    return cache.resource || GetCurrentResourceName();
+  }
+
+  /**
    * Get player's current gang data
    */
   getPlayerGang(): GangData | null {
@@ -74,14 +81,14 @@ export class OxCoreGangFramework {
       return;
     }
 
-    emitNet(`${cache.resource}:gang:requestMenu`);
+    emitNet(`${this.getResourceName()}:gang:requestMenu`);
   }
 
   /**
    * Request to create a gang
    */
   createGang(gangName: string, label: string): void {
-    emitNet(`${cache.resource}:gang:create`, gangName, label);
+    emitNet(`${this.getResourceName()}:gang:create`, gangName, label);
   }
 
   /**
@@ -93,7 +100,7 @@ export class OxCoreGangFramework {
       return;
     }
 
-    emitNet(`${cache.resource}:gang:invite`, targetId);
+    emitNet(`${this.getResourceName()}:gang:invite`, targetId);
   }
 
   /**
@@ -105,7 +112,7 @@ export class OxCoreGangFramework {
       return;
     }
 
-    emitNet(`${cache.resource}:gang:kick`, identifier);
+    emitNet(`${this.getResourceName()}:gang:kick`, identifier);
   }
 
   /**
@@ -117,7 +124,7 @@ export class OxCoreGangFramework {
       return;
     }
 
-    emitNet(`${cache.resource}:gang:promote`, identifier);
+    emitNet(`${this.getResourceName()}:gang:promote`, identifier);
   }
 
   /**
@@ -129,7 +136,7 @@ export class OxCoreGangFramework {
       return;
     }
 
-    emitNet(`${cache.resource}:gang:demote`, identifier);
+    emitNet(`${this.getResourceName()}:gang:demote`, identifier);
   }
 
   /**
@@ -141,7 +148,7 @@ export class OxCoreGangFramework {
       return;
     }
 
-    emitNet(`${cache.resource}:gang:leave`);
+    emitNet(`${this.getResourceName()}:gang:leave`);
   }
 
   /**
@@ -170,6 +177,7 @@ export class OxCoreGangFramework {
 export const oxCoreGang = new OxCoreGangFramework();
 
 // Setup client-side event handlers
-onNet(`${cache.resource}:gang:updateData`, (gangData: GangData | null) => {
+const resourceName = cache.resource || GetCurrentResourceName();
+onNet(`${resourceName}:gang:updateData`, (gangData: GangData | null) => {
   oxCoreGang.updateGangData(gangData);
 });

@@ -32,11 +32,26 @@ export class QbxCoreGangFramework {
   private currentGang: GangData | null = null;
 
   constructor() {
-    // @ts-ignore - QBCore is a global export from qbx_core
-    global.exports['qbx_core'].GetCoreObject().then((core: QBCore) => {
-      this.QBCore = core;
-      this.loadGangData();
-    });
+    // Handle both sync and async QBCore initialization
+    try {
+      const coreExport = (global as any).exports?.['qbx_core']?.GetCoreObject;
+      if (coreExport) {
+        const result = coreExport();
+        if (result && typeof result.then === 'function') {
+          // Async
+          result.then((core: QBCore) => {
+            this.QBCore = core;
+            this.loadGangData();
+          });
+        } else {
+          // Sync
+          this.QBCore = result;
+          this.loadGangData();
+        }
+      }
+    } catch (error) {
+      console.error('Failed to initialize QBCore:', error);
+    }
   }
 
   /**
@@ -117,7 +132,6 @@ export class QbxCoreGangFramework {
       return;
     }
 
-    // @ts-ignore - Emit to server
     emitNet('qbx_gang:server:requestMenu');
   }
 
@@ -125,7 +139,6 @@ export class QbxCoreGangFramework {
    * Request to create a gang
    */
   createGang(gangName: string, label: string): void {
-    // @ts-ignore - Emit to server
     emitNet('qbx_gang:server:createGang', gangName, label);
   }
 
@@ -138,7 +151,6 @@ export class QbxCoreGangFramework {
       return;
     }
 
-    // @ts-ignore - Emit to server
     emitNet('qbx_gang:server:invitePlayer', targetId);
   }
 
@@ -151,7 +163,6 @@ export class QbxCoreGangFramework {
       return;
     }
 
-    // @ts-ignore - Emit to server
     emitNet('qbx_gang:server:kickMember', citizenid);
   }
 
@@ -164,7 +175,6 @@ export class QbxCoreGangFramework {
       return;
     }
 
-    // @ts-ignore - Emit to server
     emitNet('qbx_gang:server:promoteMember', citizenid);
   }
 
@@ -177,7 +187,6 @@ export class QbxCoreGangFramework {
       return;
     }
 
-    // @ts-ignore - Emit to server
     emitNet('qbx_gang:server:demoteMember', citizenid);
   }
 
@@ -190,7 +199,6 @@ export class QbxCoreGangFramework {
       return;
     }
 
-    // @ts-ignore - Emit to server
     emitNet('qbx_gang:server:leaveGang');
   }
 
@@ -198,8 +206,16 @@ export class QbxCoreGangFramework {
    * Display gang notification
    */
   showNotification(message: string, type: 'success' | 'error' | 'primary' = 'primary'): void {
-    // @ts-ignore - QBCore notify export
-    global.exports['qbx_core'].Notify(message, type);
+    try {
+      const notifyExport = (global as any).exports?.['qbx_core']?.Notify;
+      if (notifyExport) {
+        notifyExport(message, type);
+      } else {
+        console.log(`[Gang ${type}]: ${message}`);
+      }
+    } catch (error) {
+      console.log(`[Gang ${type}]: ${message}`);
+    }
   }
 
   /**
